@@ -96,7 +96,7 @@ void AAICharacter::OnHealthChanged(AActor* InstigatorActor, UAttributeComponent*
 			}
 
 			GetMesh()->SetAllBodiesSimulatePhysics(true);
-			GetMesh()->SetCollisionProfileName("Trigger");
+			GetMesh()->SetCollisionProfileName("Ragdoll");
 
 			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			GetCharacterMovement()->DisableMovement();

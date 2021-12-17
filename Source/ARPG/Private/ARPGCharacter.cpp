@@ -24,7 +24,7 @@ AARPGCharacter::AARPGCharacter()
 	StateTimerHandleMap.Add(EPlayerState::Evade,FTimerHandle());
 	CDMap.Add(EPlayerState::Atk1,3.f);
 	CDMap.Add(EPlayerState::NAtk,0.7f);
-	CDMap.Add(EPlayerState::Evade,2.f);
+	CDMap.Add(EPlayerState::Evade,1.3f);
 	ReadyFlagMap.Add(EPlayerState::Atk1,true);
 	ReadyFlagMap.Add(EPlayerState::NAtk,true);
 	ReadyFlagMap.Add(EPlayerState::Evade,true);
@@ -142,7 +142,8 @@ void AARPGCharacter::ActionBase(EPlayerState TargetState)
 		FTimerDelegate ResetCD;
 		ResetCD.BindLambda([this,TargetState]
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, FString::Printf(TEXT("Cooldown")));
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, FString::Printf(TEXT("%s Cooldown"),
+				*StaticEnum<EPlayerState>()->GetNameStringByValue(static_cast<uint8>(TargetState))));
 			this->ReadyFlagMap[TargetState]=true;
 		});
 		GetWorldTimerManager().SetTimer(CDTimerHandleMap[TargetState],ResetCD,CDMap[TargetState],false);
