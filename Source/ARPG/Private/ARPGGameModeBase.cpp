@@ -25,7 +25,7 @@ void AARPGGameModeBase::SpawnBotTimerElapsed()
 		return;
 	}
 
-	// Give points to spend
+	// 根据浮点曲线在不同时间产生不同的点数
 	if (SpawnCreditCurve)
 	{
 		AvailableSpawnCredit += SpawnCreditCurve->GetFloatValue(GetWorld()->TimeSeconds);
@@ -33,13 +33,12 @@ void AARPGGameModeBase::SpawnBotTimerElapsed()
 
 	if (CooldownBotSpawnUntil > GetWorld()->TimeSeconds)
 	{
-		// Still cooling down
 		return;
 	}
 
 	GEngine->AddOnScreenDebugMessage(-1,2.f, FColor::Red,FString::Printf(TEXT("Available SpawnCredits: %f"), AvailableSpawnCredit));
 
-	// Count alive bots before spawning
+	// 在生成怪物前判断怪物数量
 	int32 NrOfAliveBots = 0;
 	for (TActorIterator<AAICharacter> It(GetWorld()); It; ++It)
 	{
@@ -63,26 +62,25 @@ void AARPGGameModeBase::SpawnBotTimerElapsed()
 
 	if (MonsterTable)
 	{
-		// Reset before selecting new row
+		// 重置
 		SelectedMonsterRow = nullptr;
 
 		TArray<FMonsterInfoRow*> Rows;
 		MonsterTable->GetAllRows("", Rows);
 
-		// Get total weight
+		// 获得总生成权重
 		float TotalWeight = 0;
 		for (FMonsterInfoRow* Entry : Rows)
 		{
 			TotalWeight += Entry->Weight;
 		}
 
-		// Random number within total random
+		// 随机生成
 		int32 RandomWeight = FMath::RandRange(0.0f, TotalWeight);
-
-		//Reset
+		
 		TotalWeight = 0;
 
-		// Get monster based on random weight
+		// 根据weight作为概率生成怪物
 		for (FMonsterInfoRow* Entry : Rows)
 		{
 			TotalWeight += Entry->Weight;
@@ -96,7 +94,7 @@ void AARPGGameModeBase::SpawnBotTimerElapsed()
 
 		if (SelectedMonsterRow && SelectedMonsterRow->SpawnCost >= AvailableSpawnCredit)
 		{
-			// Too expensive to spawn, try again soon
+			// 选中的怪物没有点数去生成，等会儿再调用一次
 			CooldownBotSpawnUntil = GetWorld()->TimeSeconds + CooldownTimeBetweenFailures;
 
 			GEngine->AddOnScreenDebugMessage(-1,2.f, FColor::Red, FString::Printf(TEXT("Cooling down until: %f"), CooldownBotSpawnUntil));
@@ -104,7 +102,7 @@ void AARPGGameModeBase::SpawnBotTimerElapsed()
 		}
 	}
 
-	// Run EQS to find valid spawn location
+	// 使用环境查询生成怪物
 	UEnvQueryInstanceBlueprintWrapper* QueryInstance = UEnvQueryManager::RunEQSQuery(this, SpawnBotQuery, this, EEnvQueryRunMode::RandomBest5Pct, nullptr);
 	if (ensure(QueryInstance))
 	{
@@ -126,7 +124,7 @@ void AARPGGameModeBase::OnBotSpawnQueryCompleted(UEnvQueryInstanceBlueprintWrapp
 	{	
 		if (UAssetManager* Manager = UAssetManager::GetIfValid())
 		{
-			// Apply spawn cost
+			// 应用生成怪物花费
 			AvailableSpawnCredit -= SelectedMonsterRow->SpawnCost;
 
 			FPrimaryAssetId MonsterId = SelectedMonsterRow->MonsterId;
@@ -151,7 +149,7 @@ void AARPGGameModeBase::OnMonsterLoaded(FPrimaryAssetId LoadedId, FVector SpawnL
 			{
 				GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Red,FString::Printf(TEXT("Spawned enemy: %s (%s)"), *GetNameSafe(NewBot), *GetNameSafe(MonsterData)));
 
-				// Grant special actions, buffs etc.
+				// 加初始buff
 				UActionComponent* ActionComp = Cast<UActionComponent>(NewBot->GetComponentByClass(UActionComponent::StaticClass()));
 				if (ActionComp)
 				{
@@ -186,11 +184,6 @@ void AARPGGameModeBase::RespawnPlayerElapsed(AController* Controller)
 			}
 		}
 		AActor* PS=FindPlayerStart(Controller);
-		if(ensure(PS))
-		{
-			GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Red,FString::Printf(TEXT(
-				"PlayerStart:%s"),*PS->GetName()));
-		}
 
 		APawn* P=Controller->GetPawn();
 		if(ensure(P))
@@ -209,9 +202,9 @@ AARPGGameModeBase::AARPGGameModeBase()
 
 	PlayerStateClass = AARPGPlayerState::StaticClass();
 	
-	// set default pawn class to our Blueprinted character
+	// 设置玩家默认pawn为我的蓝图pawn
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Blueprints/BP_ARGPCharacter"));
-	if (PlayerPawnBPClass.Class != NULL)
+	if (PlayerPawnBPClass.Class != nullptr)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
@@ -221,7 +214,7 @@ void AARPGGameModeBase::OnActorKilled(AActor* VictimActor, AActor* Killer)
 {
 	UE_LOG(LogTemp, Log, TEXT("OnActorKilled: Victim: %s, Killer: %s"), *GetNameSafe(VictimActor), *GetNameSafe(Killer));
 
-	// Handle Player death
+	// 处理玩家死亡事件
 	AARPGCharacter* Player = Cast<AARPGCharacter>(VictimActor);
 	if (Player)
 	{
@@ -231,16 +224,14 @@ void AARPGGameModeBase::OnActorKilled(AActor* VictimActor, AActor* Killer)
 		
 		float RespawnDelay = 2.0f;
 		GetWorldTimerManager().SetTimer(TimerHandle_RespawnDelay, Delegate, RespawnDelay, false);
-
-		// Store time if it was better than previous record
 	}
 
-	// Give Credits for kill
+	// 给予击杀积分
 	APawn* KillerPawn = Cast<APawn>(Killer);
 	// Don't credit kills of self
 	if (KillerPawn && KillerPawn != VictimActor)
 	{
-		// Only Players will have a 'PlayerState' instance, bots have nullptr
+		// 只有玩家拥有玩家状态
 		AARPGPlayerState* PS = KillerPawn->GetPlayerState<AARPGPlayerState>();
 		if (PS) 
 		{
@@ -271,8 +262,7 @@ void AARPGGameModeBase::StartPlay()
 		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Red,TEXT("Credit curve not found"));
 	}
 	
-	// Continuous timer to spawn in more bots.
-	// Actual amount of bots and whether its allowed to spawn determined by spawn logic later in the chain...
+	// 持续生成怪物
 	GetWorldTimerManager().SetTimer(TimerHandle_SpawnBots, this, &AARPGGameModeBase::SpawnBotTimerElapsed, SpawnTimerInterval, true);
 	
 }
