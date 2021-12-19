@@ -71,6 +71,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AI")
 	int32 CreditsPerKill;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> DeathHUDClass;
+	
 	UFUNCTION()
 	void SpawnBotTimerElapsed();
 

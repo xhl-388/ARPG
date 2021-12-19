@@ -17,15 +17,19 @@ AARPGCharacter::AARPGCharacter()
 	MPlayerState=EPlayerState::IdleMove;
 
 	CDTimerHandleMap.Add(EPlayerState::Atk1,FTimerHandle());
+	CDTimerHandleMap.Add(EPlayerState::Atk2,FTimerHandle());
 	CDTimerHandleMap.Add(EPlayerState::NAtk,FTimerHandle());
 	CDTimerHandleMap.Add(EPlayerState::Evade,FTimerHandle());
 	StateTimerHandleMap.Add(EPlayerState::Atk1,FTimerHandle());
+	StateTimerHandleMap.Add(EPlayerState::Atk2,FTimerHandle());
 	StateTimerHandleMap.Add(EPlayerState::NAtk,FTimerHandle());
 	StateTimerHandleMap.Add(EPlayerState::Evade,FTimerHandle());
 	CDMap.Add(EPlayerState::Atk1,3.f);
+	CDMap.Add(EPlayerState::Atk2,3.f);
 	CDMap.Add(EPlayerState::NAtk,0.7f);
 	CDMap.Add(EPlayerState::Evade,1.3f);
 	ReadyFlagMap.Add(EPlayerState::Atk1,true);
+	ReadyFlagMap.Add(EPlayerState::Atk2,true);
 	ReadyFlagMap.Add(EPlayerState::NAtk,true);
 	ReadyFlagMap.Add(EPlayerState::Evade,true);
 	
@@ -90,6 +94,7 @@ void AARPGCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("NAtk",IE_Pressed,this,&AARPGCharacter::NormalAttack);
 	PlayerInputComponent->BindAction("Atk1",IE_Pressed,this,&AARPGCharacter::Attack1);
+	PlayerInputComponent->BindAction("Atk2",IE_Pressed,this,&AARPGCharacter::Attack2);
 
 	PlayerInputComponent->BindAction("Evade",IE_Pressed,this,&AARPGCharacter::Evade);
 	
@@ -160,6 +165,11 @@ void AARPGCharacter::ActionBase(EPlayerState TargetState)
 void AARPGCharacter::Attack1()
 {
 	ActionBase(EPlayerState::Atk1);
+}
+
+void AARPGCharacter::Attack2()
+{
+	ActionBase(EPlayerState::Atk2);
 }
 
 void AARPGCharacter::NormalAttack()

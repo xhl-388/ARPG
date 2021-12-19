@@ -10,8 +10,9 @@
 UENUM(BlueprintType)
 enum class EPlayerState:uint8
 {
-	Atk1			UMETA(DisplayName="Attack_1") ,
 	IdleMove		UMETA(DisplayName="Free"),
+	Atk1			UMETA(DisplayName="Attack_1") ,
+	Atk2			UMETA(DisplayName="Attack_2"),
 	Jump			UMETA(DisplayName="Jump"),
 	Evade			UMETA(DisplayName="Evade"),
 	NAtk			UMETA(DisplayName="NormalAttack")
@@ -64,6 +65,8 @@ protected:
 
 	void Attack1();
 
+	void Attack2();
+
 	void NormalAttack();
 
 	void Evade();
@@ -74,9 +77,6 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	UFUNCTION(BlueprintCallable)
-	FORCEINLINE bool GetIsAttacking1() const {return MPlayerState==EPlayerState::Atk1;}
 
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE uint8 GetMPlayerState() const {return static_cast<uint8>(MPlayerState);}

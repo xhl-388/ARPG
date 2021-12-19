@@ -168,6 +168,7 @@ void AARPGGameModeBase::RespawnPlayerElapsed(AController* Controller)
 	if (ensure(Controller))
 	{
 		APawn* PlayerPawn=Controller->GetPawn();
+		APlayerController* PlayerController=Cast<APlayerController>(Controller);
 		if(ensure(PlayerPawn))
 		{
 			AARPGPlayerState* PlayerState=PlayerPawn->GetPlayerState<AARPGPlayerState>();
@@ -175,6 +176,9 @@ void AARPGGameModeBase::RespawnPlayerElapsed(AController* Controller)
 			PlayerState->ReduceLife();
 			if(PlayerState->GetLifes()<=0)
 			{
+				UUserWidget* DeathHUD=CreateWidget<UUserWidget>(GetWorld(),DeathHUDClass.Get());
+				DeathHUD->AddToViewport();
+				PlayerController->SetShowMouseCursor(true);
 				UGameplayStatics::SetGamePaused(GetWorld(),true);
 			}
 			UAttributeComponent* AC=UAttributeComponent::GetAttributes(PlayerPawn);
